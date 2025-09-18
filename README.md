@@ -2,6 +2,11 @@
 
 A Spring Boot starter that provides a chained asynchronous task execution engine backed by MySQL. Each flow consists of ordered nodes that run sequentially with persistence, retry, manual triggering, and recovery via scheduled polling.
 
+## Modules
+
+- `async-task-flow-starter` — the reusable Spring Boot starter published as a dependency.
+- `async-task-flow-demo` — a runnable sample application that seeds a flow and exercises the starter.
+
 ## Features
 
 - Flow and node metadata persisted with Spring Data JPA (MySQL 8.0+).
@@ -46,6 +51,39 @@ public class EmailNodeHandler implements FlowNodeHandler {
 4. Ensure scheduling is enabled (e.g. `@EnableScheduling`) so the recovery cron job runs.
 
 5. Trigger flows via the provided REST API or invoke the `FlowEngine` bean directly.
+
+## Demo Application
+
+A runnable demo lives under the `async-task-flow-demo` module. It seeds a sample flow definition, registers two handlers, and exposes simple endpoints for triggering the flow.
+
+Run it with an in-memory H2 database:
+
+```bash
+mvn -pl async-task-flow-demo spring-boot:run
+```
+
+Example request:
+
+```bash
+curl -X POST http://localhost:8080/demo/flows \\
+  -H 'Content-Type: application/json' \\
+  -d '{"name":"Ada","contact":"ada@example.com","externalReference":"user-123"}'
+```
+
+Retrieve the instance (or use the starter's `/async-flow` endpoints):
+
+```bash
+curl http://localhost:8080/demo/flows/1
+```
+
+To exercise the demo against MySQL, create a database (e.g. `async_task_flow_demo`) and start the app with the `mysql` profile:
+
+```bash
+mysql -uroot -p123456 -e "CREATE DATABASE IF NOT EXISTS async_task_flow_demo CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+mvn -pl async-task-flow-demo spring-boot:run -Dspring-boot.run.profiles=mysql
+```
+
+Flyway will automatically create the required tables on startup.
 
 ## REST API
 

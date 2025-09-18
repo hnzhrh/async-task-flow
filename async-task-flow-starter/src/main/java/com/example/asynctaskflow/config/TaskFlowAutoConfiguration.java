@@ -12,15 +12,26 @@ import com.example.asynctaskflow.scheduling.PendingNodeScheduler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import com.example.asynctaskflow.core.model.FlowDefinition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
+import org.springframework.boot.autoconfigure.AutoConfigurationPackages;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnSingleCandidate;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.autoconfigure.orm.jpa.JpaRepositoriesAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.context.annotation.Bean;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.context.annotation.Import;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 import javax.sql.DataSource;
 import java.time.Clock;
@@ -28,10 +39,25 @@ import java.util.List;
 import java.util.concurrent.Executor;
 
 @AutoConfiguration(after = DataSourceAutoConfiguration.class)
+@AutoConfigureBefore(JpaRepositoriesAutoConfiguration.class)
 @ConditionalOnClass({DataSource.class})
 @EnableConfigurationProperties(TaskFlowProperties.class)
 @ConditionalOnProperty(prefix = "async.taskflow", name = "enabled", havingValue = "true", matchIfMissing = true)
+@EnableJpaRepositories(basePackageClasses = FlowDefinitionRepository.class)
+@EntityScan(basePackageClasses = FlowDefinition.class)
+@Import(com.example.asynctaskflow.TaskFlowPackages.class)
 public class TaskFlowAutoConfiguration {
+
+    private static final Logger log = LoggerFactory.getLogger(TaskFlowAutoConfiguration.class);
+
+    @Bean
+    public static BeanFactoryPostProcessor taskFlowAutoConfigurationPackagesRegistrar() {
+        return beanFactory -> {
+            System.out.println("[TaskFlowAutoConfiguration] registering base package");
+            AutoConfigurationPackages.register((ConfigurableListableBeanFactory) beanFactory,
+                    "com.example.asynctaskflow.core");
+        };
+    }
 
     @Bean
     @ConditionalOnMissingBean

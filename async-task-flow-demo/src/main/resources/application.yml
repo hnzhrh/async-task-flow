@@ -1,0 +1,67 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:async-task-flow-demo;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  flyway:
+    locations: classpath:db/migration
+
+logging:
+  level:
+    root: INFO
+    com.example.asynctaskflow: DEBUG
+
+async:
+  taskflow:
+    scheduler:
+      pending-cron: "*/15 * * * * *"
+      stalled-after: 1m
+      max-batch-size: 10
+    executor:
+      core-pool-size: 2
+      max-pool-size: 4
+      queue-capacity: 10
+      keep-alive: 30s
+
+---
+spring:
+  config:
+    activate:
+      on-profile: mysql
+  datasource:
+    url: jdbc:mysql://localhost:3306/async_task_flow_demo?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+  flyway:
+    locations: classpath:db/migration
+
+logging:
+  level:
+    root: INFO
+    com.example.asynctaskflow: DEBUG
+
+async:
+  taskflow:
+    scheduler:
+      pending-cron: "*/15 * * * * *"
+      stalled-after: 1m
+      max-batch-size: 10
+    executor:
+      core-pool-size: 2
+      max-pool-size: 4
+      queue-capacity: 10
+      keep-alive: 30s
